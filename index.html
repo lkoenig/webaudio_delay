@@ -1,0 +1,33 @@
+<html>
+
+<head>
+    <title>Impulse response measurement</title>
+</head>
+
+<body>
+    <h1>Impulse response measurement</h1>
+    <div>
+        <input id="gum-use" type="checkbox" checked /><label for="gum-use">Microphone (getUserMedia)</label><br />
+        <input id="gdm-use" type="checkbox" unchecked /><label for="gdm-use">Screen (getDisplayMedia)</label><br />
+    </div>
+    <button id="measureButton">Measure</button>
+
+    <div id="results-section">
+        <table id="results-table">
+            <tr>
+                <th>Date time</th>
+                <th>Label</th>
+                <th>Latency (ms)</th>
+                <th>Gain (dB)</th>
+                <th>Measurement link</th>
+                <th>Linear impulse response link</th>
+            </tr>
+        </table>
+        <div id="audioContextLatency"></div>
+        <canvas id="plotCanvas"></canvas>
+    </div>
+
+    <script src="js/app.js" type="module"></script>
+</body>
+
+</html>
