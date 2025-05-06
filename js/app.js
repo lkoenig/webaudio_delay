@@ -83,8 +83,8 @@ async function initializeAudio(onMeasurement) {
         gdmNode.connect(impulseResponseEstimatorNode, 0, impulseResponseEstimatorInputIndex);
         impulseResponseEstimatorInputIndex++;
         measurmentMetadata.push({
-            timestamp: measurmentTimestamp,
-            label: "getDisplayMedia",
+          timestamp: measurmentTimestamp,
+          label: "getDisplayMedia",
         });
     }
 
@@ -105,8 +105,8 @@ async function initializeAudio(onMeasurement) {
         gumNode.connect(impulseResponseEstimatorNode, 0, impulseResponseEstimatorInputIndex);
         impulseResponseEstimatorInputIndex++;
         measurmentMetadata.push({
-            timestamp: measurmentTimestamp,
-            label: "getUserMedia",
+          timestamp: measurmentTimestamp,
+          label: "getUserMedia",
         });
     }
 
@@ -126,8 +126,10 @@ async function initializeAudio(onMeasurement) {
                     track.stop();
                 });
             }
-            audioContext.suspend();
-            onMeasurement(event.data.measurement, audioContext.sampleRate, measurmentMetadata);
+	  const webAudioOutputLatency = audioContext.outputLatency;
+	  const webAudioBaseLatency = audioContext.baseLatency;
+	  audioContext.suspend();
+          onMeasurement(event.data.measurement, audioContext.sampleRate, measurmentMetadata, webAudioOutputLatency, webAudioBaseLatency);
         }
     };
 
@@ -156,14 +158,17 @@ function publishResult(result) {
     labelCell.appendChild(document.createTextNode(result.label));
 
     const latencyCell = resultRow.insertCell(-1);
+    const webAudioLatencyCell = resultRow.insertCell(-1);
     const gainCell = resultRow.insertCell(-1);
 
     gainCell.appendChild(document.createTextNode(`${(result.gain).toFixed(1)}`));
     if (result.gain < silenceThreshold) {
         latencyCell.appendChild(document.createTextNode("n/a"));
     } else {
-        latencyCell.appendChild(document.createTextNode(`${(result.latency * 1000).toFixed(3)}`));
+        latencyCell.appendChild(document.createTextNode(`${(result.latency * 1000).toFixed(1)}`));
     }
+
+  webAudioLatencyCell.appendChild(document.createTextNode(`${(result.webAudioOutputLatency * 1000).toFixed(1)}`));
 
 
     let measurementCell = resultRow.insertCell(-1);
@@ -183,8 +188,8 @@ function publishResult(result) {
 }
 
 startElement.onclick = () => {
-    startMeasurement((measurements, sampleRateHz, metadata) => {
-        for (let i = 0; i < measurements.length; i++) {
+  startMeasurement((measurements, sampleRateHz, metadata, webAudioOutputLatency, webAudioBaseLatency) => {
+      for (let i = 0; i < measurements.length; i++) {
             const measurement = measurements[i];
             exponential_sine_sweep.linear_response(measurement).then(ir => {
                 const measurementBlob = new Blob([getDataAsWav(sampleRateHz, 1, measurement)], { type: "audio/wav" });
@@ -207,9 +212,10 @@ startElement.onclick = () => {
                     gain: gainDb,
                     impulseResponseLink: URL.createObjectURL(irBlob),
                     measurementLink: URL.createObjectURL(measurementBlob),
+		    webAudioOutputLatency: webAudioOutputLatency,
+		    webAudioBaseLatency: webAudioBaseLatency,
                 });
             });
         }
-        audioContextLatency.textContent = `AudioContext baseLatency: ${audioContext.baseLatency} outputLatency: ${audioContext.outputLatency}`;
     });
 };
