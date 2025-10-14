@@ -147,8 +147,8 @@ function startMeasurement(onMeasurement) {
 
 const p = new Plot(plotCanvas);
 
-function publishResult(result) {
-    const resultRow = resultsTable.insertRow(-1)
+function publishResult(resultRow, result) {
+    resultRow.replaceChildren(); // Clear "Measuring..."
 
     const timestampCell = resultRow.insertCell(-1);
     const ts = new Date(result.timestamp);
@@ -188,6 +188,9 @@ function publishResult(result) {
 }
 
 startElement.onclick = () => {
+    const resultRow = resultsTable.insertRow(-1);
+    resultRow.insertCell(-1).appendChild(document.createTextNode("Measuring..."));
+
   startMeasurement((measurements, sampleRateHz, metadata, webAudioOutputLatency, webAudioBaseLatency) => {
       for (let i = 0; i < measurements.length; i++) {
             const measurement = measurements[i];
@@ -205,16 +208,18 @@ startElement.onclick = () => {
                 if (gainDb > silenceThreshold) {
                     p.vLine(delay + preDelay, "#00f");
                 }
-                publishResult({
-                    timestamp: metadata[i].timestamp,
-                    label: metadata[i].label,
-                    latency: delay,
-                    gain: gainDb,
-                    impulseResponseLink: URL.createObjectURL(irBlob),
-                    measurementLink: URL.createObjectURL(measurementBlob),
-		    webAudioOutputLatency: webAudioOutputLatency,
-		    webAudioBaseLatency: webAudioBaseLatency,
-                });
+                publishResult(
+                    resultRow,
+                    {
+                        timestamp: metadata[i].timestamp,
+                        label: metadata[i].label,
+                        latency: delay,
+                        gain: gainDb,
+                        impulseResponseLink: URL.createObjectURL(irBlob),
+                        measurementLink: URL.createObjectURL(measurementBlob),
+                        webAudioOutputLatency: webAudioOutputLatency,
+                        webAudioBaseLatency: webAudioBaseLatency,
+                    });
             });
         }
     });
